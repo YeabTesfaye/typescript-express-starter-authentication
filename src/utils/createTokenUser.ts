@@ -6,7 +6,9 @@ interface User {
   bio: string | null;
   role: string;
   profile_picture: string | null;
-  status: string;
+  isEmailVerified: boolean;
+  age: number;
+  gender: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -18,7 +20,8 @@ interface TokenUser {
   role: string;
   bio?: string | null;
   image?: string;
-  status: string;
+  age: number;
+  gender: string;
 }
 
 export const createToken = (user: Partial<User>) => {
@@ -29,6 +32,8 @@ export const createToken = (user: Partial<User>) => {
     role: user.role,
     bio: user.bio,
     image: user.profile_picture,
-    status: user.status, 
+    isEmailVerifyied: user.isEmailVerified,
+    age: user.age,
+    gender: user.gender,
   };
 };

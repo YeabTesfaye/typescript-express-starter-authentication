@@ -20,8 +20,20 @@ model User {
   password String
   role Role @default(USER)
   bio String?
+  gender Gender 
+  age Int 
+  isEmailVerified Boolean @default(false)
+  verificationToken String @default("")
+  profileImage String @default("")
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+}
+
+model PassWordReset{
+  id String @id @default(uuid())
+  email String @unique
+  token String 
+  expires DateTime
 }
 
 enum Status{
@@ -33,3 +45,9 @@ enum Role{
   ADMIN
   USER 
 }
+
+enum Gender {
+  Male
+  Female
+}
+

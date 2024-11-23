@@ -1,20 +1,27 @@
+// utils/email.ts
 import nodemailer from 'nodemailer';
 
-const transporter = nodemailer.createTransport({
-  service : process.env.SERVICE,
-  host: process.env.EMAIL_HOST,
-  port: parseInt(process.env.EMAIL_PORT || '587', 10),
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
+interface EmailOptions {
+  to: string;
+  subject: string;
+  html: string;
+}
 
-export const sendEmail = async (to: string, subject: string, html: string) => {
-  await transporter.sendMail({
-    from: process.env.EMAIL_USER,
-    to,
-    subject,
-    html,
+export const sendEmail = async (options: EmailOptions): Promise<void> => {
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_ADDRESS,
+      pass: process.env.EMAIL_PASSWORD,
+    },
   });
+
+  const mailOptions = {
+    from: process.env.EMAIL_ADDRESS,
+    to: options.to,
+    subject: options.subject,
+    html: options.html,
+  };
+
+  await transporter.sendMail(mailOptions);
 };

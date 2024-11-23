@@ -3,6 +3,10 @@ export interface UserData {
   email: string;
   password: string;
   bio?: string;
-  profile_picture?: string;
+  profileImage?: string;
+  verificationToken?: string;
+  isEmailVerified?: boolean;
+  gender?: string;
+  age: string;
   role?: string;
 }

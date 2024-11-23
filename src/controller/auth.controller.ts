@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, RequestHandler } from 'express';
 import prisma from '../configs/db';
 import { StatusCodes } from 'http-status-codes';
 import BadRequestError from '../errors/bad-request';
@@ -9,16 +9,27 @@ import { generateVerificationCode } from '../utils/generateVerificationCode';
 import { createToken } from '../utils/createTokenUser';
 import { attachCookiesToResponse } from '../utils/jwt';
 import { UserData } from '../intefaces/auth';
+import NotFoundError from '../errors/not-found';
+import crypto from 'crypto';
+import { Gender } from '@prisma/client';
+import nodemailer from 'nodemailer';
 
 export const register = async (
   req: Request<{}, {}, UserData>,
   res: Response,
 ) => {
-  const { name, email, password, bio } = req.body;
+  const { name, email, password, bio, gender, age } = req.body;
 
-  // this is just for ts
-  if (!name || !email || !password) {
+  // Validation for required fields
+  if (!name || !email || !password || !gender || !age) {
     throw new BadRequestError('Please provide all required fields');
+  }
+
+  // Ensure gender matches the allowed enum values
+  if (!Object.values(Gender).includes(gender as Gender)) {
+    throw new BadRequestError(
+      `Invalid gender. Allowed values: ${Object.values(Gender).join(', ')}`,
+    );
   }
   // Check if email is already taken
   const isEmailExist = await prisma.user.findUnique({
@@ -36,43 +47,41 @@ export const register = async (
 
   // Hashing the password
   const salt = await bcrypt.genSalt();
-  if (!password) {
-    throw new BadRequestError('Password is required!');
-  }
   const hashedPassword: string = await bcrypt.hash(password, salt);
 
+  const verificationToken = crypto.randomBytes(20).toString('hex');
+
+  // Create user
   const user = await prisma.user.create({
     data: {
-      name: name,
-      email: email,
+      name,
+      email,
       password: hashedPassword,
       bio: bio ?? null,
-      role: role,
+      gender: gender as Gender,
+      age: parseInt(age, 10),
+      role,
+      verificationToken,
     },
   });
 
-  res.status(StatusCodes.CREATED).json({
-    message: 'User Created Sucesfully!',
+  const verificationUrl =
+    process.env.CLIENT_URL + '/verifyemail' + `/${verificationToken}`;
+
+  // Use the email utility function
+  await sendEmail({
+    to: email,
+    subject: 'Email Verification',
+    html: `
+       <h3>Verify your Email</h3>
+       <a href=${verificationUrl}>${verificationUrl}</a>
+     `,
   });
-};
 
-export const verifyUser = async (req: Request, res: Response) => {
-  const { email, code } = req.body;
-
-  // Check if the user exist and if the code matches
-  const user = await prisma.user.findUnique({
-    where: { email },
+  res.status(200).json({
+    id: user.id,
+    link: verificationUrl,
   });
-
-  // update the user status
-  // await prisma.user.update({
-  //   where: { email },
-  //   data: {
-  //     status: 'ACTIVE',
-  //     verificationCode: undefined,
-  //   },
-  // });
-  res.status(StatusCodes.OK).json({ message: 'Account verified successfully' });
 };
 
 export const login = async (req: Request, res: Response) => {
@@ -96,9 +105,9 @@ export const login = async (req: Request, res: Response) => {
   if (!isPasswordCorrect) {
     throw new UnauthenticatedError('Invalid Credintials');
   }
-  // if (user.status === 'PENDING') {
-  //   throw new BadRequestError('Please active your account!');
-  // }
+  if (user.isEmailVerified === false) {
+    throw new BadRequestError('Please verify your email!');
+  }
 
   // Generate Token
   const tokenUser = createToken(user);
@@ -114,4 +123,128 @@ export const logout = async (req: Request, res: Response) => {
   res
     .status(StatusCodes.OK)
     .json({ msg: 'User has been logged out successfully !!' });
+};
+
+// Forget Password
+export const forgetPassword = async (req: Request, res: Response) => {
+  const { email } = req.body;
+  const user = await prisma.user.findUnique({
+    where: {
+      email,
+    },
+  });
+
+  if (!user) {
+    new NotFoundError(`User with email ${email} doesn't exist !!`);
+  }
+
+  const token = crypto.randomBytes(20).toString('hex');
+  const expires = new Date();
+  expires.setHours(expires.getHours() + 1); // Expires after one hour
+
+  await prisma.passWordReset.create({
+    data: {
+      email,
+      token,
+      expires,
+    },
+  });
+  const link = process.env.CLIENT_URL + '/resetpassword' + `/${token}`;
+
+  // SEND EMAIL
+  /*
+  await sendEmail({
+    to: email,
+    subject: 'Password Reset',
+    html: `
+      <h3>Reset your Password</h3>
+      <a href=${link}>${link}</a>
+    `,
+  });
+  */
+  res.status(StatusCodes.OK).json({
+    message: `Password reset email sent ${link}`,
+  });
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  const { password } = req.body;
+  if (!password) {
+    throw new BadRequestError('A password Filed is requried');
+  }
+
+  const { token } = req.params;
+  const passwordReset = await prisma.passWordReset.findFirst({
+    where: {
+      token,
+    },
+  });
+
+  if (!passwordReset) {
+   throw new BadRequestError('Invalid token');
+  }
+
+  if (passwordReset.expires < new Date()) {
+    throw new BadRequestError('Token has expired');
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      email: passwordReset.email,
+    },
+  });
+
+  if (!user) {
+    new BadRequestError('user not found');
+  }
+
+  // Delete password reset
+  await prisma.passWordReset.deleteMany({
+    where: {
+      token: token,
+      email: passwordReset.email,
+    },
+  });
+
+  const salt = await bcrypt.genSalt();
+  const hashedPassword = await bcrypt.hash(password, salt);
+  await prisma.user.update({
+    where: {
+      email: passwordReset.email,
+    },
+    data: {
+      password: hashedPassword,
+    },
+  });
+
+  res.status(StatusCodes.OK).json({
+    message: 'the password updated sucessfully !!',
+  });
+};
+
+export const verifyEmail = async (req: Request, res: Response) => {
+  const { token } = req.params;
+
+  const user = await prisma.user.findFirst({
+    where: {
+      verificationToken: token,
+    },
+  });
+
+  if (!user) {
+    res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ msg: 'Invalid Verification Token' });
+    return;
+  }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      isEmailVerified: true,
+      verificationToken: '',
+    },
+  });
+
+  res.status(200).json({ msg: 'Email Verified' });
 };
