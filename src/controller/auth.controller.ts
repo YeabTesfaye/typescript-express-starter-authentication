@@ -69,6 +69,7 @@ export const register = async (
     process.env.CLIENT_URL + '/verifyemail' + `/${verificationToken}`;
 
   // Use the email utility function
+  /*
   await sendEmail({
     to: email,
     subject: 'Email Verification',
@@ -77,6 +78,7 @@ export const register = async (
        <a href=${verificationUrl}>${verificationUrl}</a>
      `,
   });
+  */
 
   res.status(200).json({
     id: user.id,
@@ -170,18 +172,16 @@ export const forgetPassword = async (req: Request, res: Response) => {
 export const resetPassword = async (req: Request, res: Response) => {
   const { password } = req.body;
   if (!password) {
-    throw new BadRequestError('A password Filed is requried');
+    throw new BadRequestError('A password field is required');
   }
 
   const { token } = req.params;
   const passwordReset = await prisma.passWordReset.findFirst({
-    where: {
-      token,
-    },
+    where: { token },
   });
 
   if (!passwordReset) {
-   throw new BadRequestError('Invalid token');
+    throw new BadRequestError('Invalid token');
   }
 
   if (passwordReset.expires < new Date()) {
@@ -189,37 +189,36 @@ export const resetPassword = async (req: Request, res: Response) => {
   }
 
   const user = await prisma.user.findUnique({
-    where: {
-      email: passwordReset.email,
-    },
+    where: { email: passwordReset.email },
   });
 
   if (!user) {
-    new BadRequestError('user not found');
+    throw new BadRequestError(
+      `User with email ${passwordReset.email} does not exist.`,
+    );
   }
-
-  // Delete password reset
-  await prisma.passWordReset.deleteMany({
-    where: {
-      token: token,
-      email: passwordReset.email,
-    },
-  });
 
   const salt = await bcrypt.genSalt();
   const hashedPassword = await bcrypt.hash(password, salt);
-  await prisma.user.update({
-    where: {
-      email: passwordReset.email,
-    },
-    data: {
-      password: hashedPassword,
-    },
-  });
+  try {
+    // Update the user's password
+    await prisma.user.update({
+      where: { email: passwordReset.email },
+      data: { password: hashedPassword },
+    });
 
-  res.status(StatusCodes.OK).json({
-    message: 'the password updated sucessfully !!',
-  });
+    // Delete the password reset record
+    await prisma.passWordReset.deleteMany({
+      where: { token, email: passwordReset.email },
+    });
+
+    res.status(StatusCodes.OK).json({
+      message: 'The password has been updated successfully!',
+    });
+  } catch (error) {
+    console.error('Failed to reset password:', error);
+    throw new Error('An error occurred while resetting the password.');
+  }
 };
 
 export const verifyEmail = async (req: Request, res: Response) => {

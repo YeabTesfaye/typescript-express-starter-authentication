@@ -1,55 +1,53 @@
-import { body } from 'express-validator';
+import { body, param } from 'express-validator';
 
-export const registerUserDataValidator = [
-  // Validate 'name'
-  body('name')
-    .exists()
-    .withMessage('Name is required.')
-    .isString()
-    .withMessage('Name must be a string.')
-    .isLength({ min: 3 })
-    .withMessage('Name must be at least 3 characters long.'),
+const VALID_ROLES = ['ADMIN', 'USER'];
 
-  // Validate 'email'
-  body('email')
-    .exists()
-    .withMessage('Email is required.')
-    .trim()
-    .normalizeEmail()
-    .isEmail()
-    .withMessage('Provide a valid email.'),
-
-  // Validate 'password'
-  body('password')
-    .exists()
-    .withMessage('Password is required.')
-    .isString()
-    .withMessage('Password must be a string.')
-    .isStrongPassword()
-    .withMessage(
-      'Password must be strong, including at least 1 uppercase letter, 1 number, and 1 symbol.',
-    ),
-
-  // 'role' and 'status' are not required and will take default values if not provided
-  // No validation is needed for 'role' and 'status' since Prisma will handle the default values
-  // But if you want to validate them when provided, you can do so as follows:
-
-  body('role')
-    .optional()
-    .isIn(['ADMIN', 'USER'])
-    .withMessage("Role must be either 'ADMIN' or 'USER'"),
-
-  body('status')
-    .optional()
-    .isIn(['PENDING', 'ACTIVE'])
-    .withMessage("Status must be either 'PENDING' or 'ACTIVE'"),
+// Validation for retrieving a user by ID
+export const validateGetUserById = [
+  param('id')
+    .exists().withMessage('User ID is required.')
+    .isUUID().withMessage('Invalid User ID format.'),
 ];
 
-export const loginUserDataValidator = [
+// Validation for updating user data
+export const validateUpdateUserData = [
+  param('id')
+    .exists().withMessage('User ID is required.')
+    .isUUID().withMessage('Invalid User ID format.'),
+  body('name')
+    .optional()
+    .isString().withMessage('Name must be a string.')
+    .isLength({ min: 3 }).withMessage('Name must be at least 3 characters long.'),
   body('email')
-    .exists()
-    .withMessage('Email is required')
-    .isEmail()
-    .withMessage('Provide valid email address'),
-  body('password').exists().withMessage('Password is required'),
+    .optional()
+    .isEmail().withMessage('Provide a valid email address.'),
+  body('bio')
+    .optional()
+    .isString().withMessage('Bio must be a string.'),
+];
+
+// Validation for updating user password
+export const validateUpdateUserPassword = [
+  param('id')
+    .exists().withMessage('User ID is required.')
+    .isUUID().withMessage('Invalid User ID format.'),
+  body('oldPassword')
+    .exists().withMessage('Old password is required.')
+    .isString().withMessage('Old password must be a string.'),
+  body('newPassword')
+    .exists().withMessage('New password is required.')
+    .isString().withMessage('New password must be a string.')
+    .isStrongPassword().withMessage(
+      'Password must include at least one uppercase letter, one number, and one symbol.',
+    ),
+];
+
+// Validation for updating user role
+export const validateUpdateUserRole = [
+  param('id')
+    .exists().withMessage('User ID is required.')
+    .isUUID().withMessage('Invalid User ID format.'),
+  body('role')
+    .exists().withMessage('Role is required.')
+    .isIn(VALID_ROLES).withMessage(`Role must be one of: ${VALID_ROLES.join(', ')}`),
 ];
