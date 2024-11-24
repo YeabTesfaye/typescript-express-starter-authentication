@@ -9,6 +9,9 @@ import UpdateData from '../intefaces/user';
 import { createToken } from '../utils/createTokenUser';
 import { attachCookiesToResponse } from '../utils/jwt';
 import BadRequestError from '../errors/bad-request';
+import { UploadedFile } from 'express-fileupload';
+import cloudinary from '../configs/cloudinary.config';
+import fs from 'fs';
 
 export const getAllUsers = async (req: Request, res: Response) => {
   const users = await prisma.user.findMany({
@@ -84,10 +87,28 @@ export const updateUserData = async (
     throw new NotFoundError(`User with ${userId} doesn't exist `);
   }
 
+  // update image and upload to cloudinary
+  let profile_picture: string | undefined;
+  if (req.files && req.files.profile_picture) {
+    const profilePicture = req.files.profile_picture as UploadedFile & {
+      tempFilePath: string;
+    };
+    const result = await cloudinary.uploader.upload(
+      profilePicture.tempFilePath,
+      {
+        use_filename: true,
+        folder: 'lms_image',
+      },
+    );
+    fs.unlinkSync(profilePicture.tempFilePath);
+    profile_picture = result.secure_url;
+  }
+
   const updateData: UpdateData = {};
   if (name) updateData.name = name;
   if (email) updateData.email = email;
   if (bio) updateData.bio = bio;
+  if (profile_picture) updateData.profile_picture = profile_picture;
 
   const updateUser = await prisma.user.update({
     where: {
@@ -100,6 +121,7 @@ export const updateUserData = async (
       email: true,
       role: true,
       bio: true,
+      profile_picture: true,
       created_at: true,
       updated_at: true,
     },

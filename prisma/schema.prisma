@@ -24,7 +24,7 @@ model User {
   age Int 
   isEmailVerified Boolean @default(false)
   verificationToken String @default("")
-  profileImage String @default("")
+  profile_picture String @default("")
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }

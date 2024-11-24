@@ -13,6 +13,9 @@ import NotFoundError from '../errors/not-found';
 import crypto from 'crypto';
 import { Gender } from '@prisma/client';
 import nodemailer from 'nodemailer';
+import cloudinary from '../configs/cloudinary.config';
+import fs from 'fs';
+import { UploadedFile } from 'express-fileupload';
 
 export const register = async (
   req: Request<{}, {}, UserData>,
@@ -49,8 +52,25 @@ export const register = async (
   const salt = await bcrypt.genSalt();
   const hashedPassword: string = await bcrypt.hash(password, salt);
 
+  // Generate a verfication code
   const verificationToken = crypto.randomBytes(20).toString('hex');
 
+  // Uploading image to Cloudinary
+  let profile_picture = '/upload/default_profile.jpg';
+  if (req.files && req.files.profile_picture) {
+    const profilePicture = req.files.profile_picture as UploadedFile & {
+      tempFilePath: string;
+    };
+    const result = await cloudinary.uploader.upload(
+      profilePicture.tempFilePath,
+      {
+        use_filename: true,
+        folder: 'lms_images',
+      },
+    );
+    fs.unlinkSync(profilePicture.tempFilePath);
+    profile_picture = result.secure_url;
+  }
   // Create user
   const user = await prisma.user.create({
     data: {
@@ -60,6 +80,7 @@ export const register = async (
       bio: bio ?? null,
       gender: gender as Gender,
       age: parseInt(age, 10),
+      profile_picture,
       role,
       verificationToken,
     },
