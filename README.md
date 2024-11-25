@@ -61,8 +61,8 @@ Create a `.env` file in the root directory and add the following environment var
 SERVICE= your service
 EMAIL_HOST= your gmail service
 EMAIL_PORT=465
-EMAIL_ADDRESS=hereisyeab@gmail.com
-EMAIL_PASSWORD=yeab@web12
+EMAIL_ADDRESS=youremail@gmail.com
+EMAIL_PASSWORD=yourpass
 NODE_ENV=development
 JWT_SECRET=THIS IS NOT A SECRET
 JWT_LIFETIME=3000000
