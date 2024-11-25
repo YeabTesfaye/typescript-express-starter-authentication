@@ -21,6 +21,11 @@ import userRouter from './routes/user.routes';
 import notFoundMiddleware from './middleware/notFound';
 import errorHandlerMiddlewar from './middleware/errorHandler';
 
+// SwaggerUI
+const swaggerUI = require('swagger-ui-express');
+const YAML = require('yamljs');
+const swaggerDocument = YAML.load('./swagger.yaml');
+
 app.use(helmet());
 app.use(cors());
 app.use(morgan('tiny'));
@@ -32,6 +37,8 @@ app.use(
     tempFileDir: '/tmp',
   }),
 );
+
+app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocument));
 
 app.get('/', (_req: Request, res: Response) => {
   res.send('Authentication and Authorization with Typescript');

@@ -24,14 +24,14 @@ authRouter.post(
   validateRequest,
   register,
 );
-authRouter.post(
+authRouter.get(
   '/verifyemail/:token',
   verifyEmailValidator,
   validateRequest,
   verifyEmail,
 );
 authRouter.post('/login', loginUserDataValidator, validateRequest, login);
-authRouter.post('/logout', logout);
+authRouter.get('/logout', logout);
 authRouter.post(
   '/forgetpassword',
   forgetPasswordValidator,

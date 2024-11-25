@@ -12,7 +12,7 @@ interface User {
 
 export const checkPermission = (
   requestUser: User,
-  resourceUserId: string,
+  _resourceUserId: string,
 ): void => {
   // Allow access if the user is an admin
   if (requestUser.role === UserRole.ADMIN) return;

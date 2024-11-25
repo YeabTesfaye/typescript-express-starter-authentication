@@ -1,5 +1,6 @@
 import express from 'express';
 import {
+  DeletUser,
   getAllUsers,
   getUserById,
   updateUserData,
@@ -32,8 +33,8 @@ userRoutes
   );
 // Update user role with validation and admin authorization
 userRoutes
-  .route('/:id/updaterole')
-  .post(
+  .route('/:id/updateRole')
+  .patch(
     [authenticatedUser, authorizePermissions('ADMIN')],
     validateUpdateUserRole,
     validateRequest,
@@ -41,13 +42,20 @@ userRoutes
   );
 
 // Get single user by Id
+userRoutes.route('/:id').get(validateGetUserById, validateRequest, getUserById);
+
+// Update user Data
 userRoutes
   .route('/:id')
-  .get(validateGetUserById, validateRequest, getUserById)
   .patch(
     [authenticatedUser],
     validateUpdateUserData,
     validateRequest,
     updateUserData,
   );
+
+// Delete User
+userRoutes
+  .route('/:id')
+  .delete([authenticatedUser, authorizePermissions('ADMIN')], DeletUser);
 export default userRoutes;

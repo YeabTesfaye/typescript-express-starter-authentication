@@ -100,7 +100,6 @@ export const register = async (
      `,
   });
   */
-
   res.status(200).json({
     id: user.id,
     link: verificationUrl,
@@ -175,7 +174,7 @@ export const forgetPassword = async (req: Request, res: Response) => {
   const link = process.env.CLIENT_URL + '/resetpassword' + `/${token}`;
 
   // SEND EMAIL
-  /*
+
   await sendEmail({
     to: email,
     subject: 'Password Reset',
@@ -184,15 +183,15 @@ export const forgetPassword = async (req: Request, res: Response) => {
       <a href=${link}>${link}</a>
     `,
   });
-  */
+
   res.status(StatusCodes.OK).json({
     message: `Password reset email sent ${link}`,
   });
 };
 
 export const resetPassword = async (req: Request, res: Response) => {
-  const { password } = req.body;
-  if (!password) {
+  const { newPassword } = req.body;
+  if (!newPassword) {
     throw new BadRequestError('A password field is required');
   }
 
@@ -220,7 +219,7 @@ export const resetPassword = async (req: Request, res: Response) => {
   }
 
   const salt = await bcrypt.genSalt();
-  const hashedPassword = await bcrypt.hash(password, salt);
+  const hashedPassword = await bcrypt.hash(newPassword, salt);
   try {
     // Update the user's password
     await prisma.user.update({
@@ -268,3 +267,4 @@ export const verifyEmail = async (req: Request, res: Response) => {
 
   res.status(200).json({ msg: 'Email Verified' });
 };
+

@@ -20,15 +20,15 @@ export const registerUserDataValidator = [
     .withMessage('Provide a valid email address.'),
 
   // Validate 'password'
-  body('password')
-    .exists({ checkFalsy: true })
-    .withMessage('Password is required.')
-    .isString()
-    .withMessage('Password must be a string.')
-    .isStrongPassword()
-    .withMessage(
-      'Password must be strong, including at least 1 uppercase letter, 1 number, and 1 symbol.',
-    ),
+  // body('password')
+  //   .exists({ checkFalsy: true })
+  //   .withMessage('Password is required.')
+  //   .isString()
+  //   .withMessage('Password must be a string.')
+  //   .isStrongPassword()
+  //   .withMessage(
+  //     'Password must be strong, including at least 1 uppercase letter, 1 number, and 1 symbol.',
+  //   ),
 
   // Validate 'role' (optional)
   body('role')
@@ -82,7 +82,7 @@ export const loginUserDataValidator = [
 
 export const resetPasswordValidator = [
   // Validate the 'password' field
-  body('password')
+  body('newPassword')
     .exists({ checkFalsy: true })
     .withMessage('Password is required.')
     .isString()

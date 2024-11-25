@@ -8,7 +8,6 @@ export const createJWT = ({ payload }: { payload: Payload }) => {
 };
 
 export const isTokenValid = ({ token }: { token: string }) => {
-  console.log(`Token ${token}`);
   return jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
 };
 

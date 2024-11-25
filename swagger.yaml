@@ -1,0 +1,324 @@
+openapi: 3.0.0
+info:
+  title: Authentication & Authorization API
+  description: API for user authentication, authorization, and account management.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local Development Server
+
+tags:
+  - name: Authentication
+    description: Endpoints related to user authentication and authorization.
+  - name: Users
+    description: Endpoints for user management.
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: user2
+                email:
+                  type: string
+                  format: email
+                  example: jhonedoe@gmail.com
+                password:
+                  type: string
+                  format: password
+                  example: secret
+                bio:
+                  type: string
+                  example: This is a bio.
+                gender:
+                  type: string
+                  enum: [Male, Female, Other]
+                  example: Male
+                age:
+                  type: integer
+                  example: 23
+                profile_picture:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: string
+                    example: abc123
+
+  /auth/verifyEmail/{token}:
+    get:
+      tags:
+        - Authentication
+      summary: Verify email address
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Verification token sent to the user's email.
+      responses:
+        '200':
+          description: Email verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Email Verified
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Log in a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: hereisyeab@gmail.com
+                password:
+                  type: string
+                  format: password
+                  example: Secretpass@123
+      responses:
+        '200':
+          description: User logged in successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userData:
+                    type: object
+                    example:
+                      userId: abc123
+                      name: John Doe
+                      email: hereisyeab@gmail.com
+
+  /auth/logout:
+    get:
+      tags:
+        - Authentication
+      summary: Log out a user
+      responses:
+        '200':
+          description: User logged out successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User has been logged out successfully!
+
+  /auth/resetpassword/{token}:
+    post:
+      tags:
+        - Authentication
+      summary: Reset user password
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Reset password token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newPassword:
+                  type: string
+                  format: password
+                  example: NewSecret@123
+      responses:
+        '200':
+          description: Password reset successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: The password has been updated successfully!
+
+  /users:
+    get:
+      tags:
+        - Users
+      summary: Get all users
+      responses:
+        '200':
+          description: Successfully retrieved all users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /users/{id}:
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+        description: User ID
+    get:
+      tags:
+        - Users
+      summary: Get a single user by ID
+      responses:
+        '200':
+          description: Successfully retrieved user
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      tags:
+        - Users
+      summary: Update user data
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: user3
+                email:
+                  type: string
+                  format: email
+                  example: hazoomy2021@outlook.com
+                password:
+                  type: string
+                  format: password
+                  example: secret
+                bio:
+                  type: string
+                  example: This is an updated bio.
+                role:
+                  type: string
+                  example: ADMIN
+                age:
+                  type: integer
+                  example: 23
+                gender:
+                  type: string
+                  enum: [Male, Female, Other]
+                  example: Male
+                profile_picture:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Successfully updated user
+          content:
+            application/json:
+              schema:
+                type: object
+    delete:
+      tags:
+        - Users
+      summary: Delete a user
+      responses:
+        '204':
+          description: User deleted successfully
+
+  /users/{id}/updatePassword:
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+        description: User ID
+    patch:
+      tags:
+        - Users
+      summary: Update user password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                oldPassword:
+                  type: string
+                  format: password
+                  example: oldSecret
+                newPassword:
+                  type: string
+                  format: password
+                  example: newSecret
+      responses:
+        '200':
+          description: Password updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /users/{id}/updateRole:
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+        description: User ID
+    patch:
+      tags:
+        - Users
+      summary: Update user role
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+                  example: ADMIN
+      responses:
+        '200':
+          description: Role updated successfully
+          content:
+            application/json:
+              schema:
+                type: object

@@ -208,3 +208,27 @@ export const updateUserRole = async (
     user,
   });
 };
+
+export const DeletUser = async (req: Request, res: Response) => {
+  const { id: userId } = req.params;
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
+  if (!user) {
+    res.status(StatusCodes.NOT_FOUND).json({
+      message: 'User not found',
+    });
+    return;
+  }
+
+  // Delete user
+  await prisma.user.delete({
+    where: {
+      id: userId,
+    },
+  });
+  res.status(StatusCodes.NO_CONTENT).send();
+};
