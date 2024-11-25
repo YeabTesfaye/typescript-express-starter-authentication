@@ -60,16 +60,16 @@ Create a `.env` file in the root directory and add the following environment var
 ```env
 SERVICE= your service
 EMAIL_HOST= your gmail service
-EMAIL_PORT=465
+EMAIL_PORT=email port 
 EMAIL_ADDRESS=youremail@gmail.com
 EMAIL_PASSWORD=yourpass
 NODE_ENV=development
-JWT_SECRET=THIS IS NOT A SECRET
-JWT_LIFETIME=3000000
+JWT_SECRET=jwtsecret
+JWT_LIFETIME=jwt life time
 CLIENT_URL=localhost:3000/api/v1/auth
-CLOUD_NAME=dggbxwbzw
-CLOUD_API_KEY=956232134621998
-CLOUD_API_SECRET=rpcyi86oXyPdeYor6MKDxEEX4gk
+CLOUD_NAME=yourcloudniaryName
+CLOUD_API_KEY=yourCloudinarykey
+CLOUD_API_SECRET=yourcloudinarysecret
 ```
 
 ## Routes
