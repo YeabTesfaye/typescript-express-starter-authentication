@@ -43,7 +43,7 @@ paths:
                   example: This is a bio.
                 gender:
                   type: string
-                  enum: [Male, Female, Other]
+                  enum: [Male, Female]
                   example: Male
                 age:
                   type: integer

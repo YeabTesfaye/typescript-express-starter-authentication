@@ -21,6 +21,7 @@ export const register = async (
   req: Request<{}, {}, UserData>,
   res: Response,
 ) => {
+  console.log(req.body);
   const { name, email, password, bio, gender, age } = req.body;
 
   // Validation for required fields
@@ -54,7 +55,7 @@ export const register = async (
 
   // Generate a verfication code
   const verificationToken = crypto.randomBytes(20).toString('hex');
-
+  console.log(verificationToken)
   // Uploading image to Cloudinary
   let profile_picture = '/upload/default_profile.jpg';
   if (req.files && req.files.profile_picture) {
@@ -267,4 +268,3 @@ export const verifyEmail = async (req: Request, res: Response) => {
 
   res.status(200).json({ msg: 'Email Verified' });
 };
-

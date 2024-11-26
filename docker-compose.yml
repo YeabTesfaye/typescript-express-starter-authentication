@@ -8,6 +8,19 @@ services:
       - 5432:5432
     volumes:
       - /var/lib/posgresql/data
+  
+  express-aut:
+    container_name: express-aut
+    image: express-aut 
+    build: . 
+    ports:
+      - 3000:3000
+    environment:
+      - NODE_ENV=development 
+      - Node_TLS_REJECT_UNAUTHORIZED:'0'
+    volumes:
+      - .:/app 
+    command: ["npm","run","dev"]
 
 volumes:
   postgres_data:
